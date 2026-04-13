@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       home: const LoginPage(),
     );
   }
-}
+}// This is a simple login page with email and password fields, validation, and a loading state.
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
