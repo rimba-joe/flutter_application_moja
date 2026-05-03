@@ -1,75 +1,72 @@
 import 'package:flutter/material.dart';
-import 'signup.dart';
-import 'landing_page.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SignupPage extends StatefulWidget {
+  const SignupPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Login Form',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
-        useMaterial3: true,
-      ),
-      home: const LoginPage(),
-    );
-  }
-}// This is a simple login page with email and password fields, validation, and a loading state.
-
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-
-  @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignupPage> createState() => _SignupPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   bool _isLoading = false;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _login() {
+  void _signup() {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      // Simulate a login delay
       Future.delayed(const Duration(seconds: 2), () {
         if (!mounted) return;
-          setState(() {
-            _isLoading = false;
-          });
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => LandingPage(
-                userEmail: _emailController.text.trim(),
-                 onLogout: () {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const LoginPage()),
-                      (route) => false,
-                    );
-                 },
-                ),
-               ),
-          );
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Account created for ${_nameController.text}'),
+            backgroundColor: Colors.green,
+          ),
+        );
       });
     }
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your email';
+    }
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}\$').hasMatch(value)) {
+      return 'Please enter a valid email';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your password';
+    }
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    return null;
   }
 
   @override
@@ -80,10 +77,7 @@ class _LoginPageState extends State<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.blueAccent.shade700,
-              Colors.blueAccent.shade400,
-            ],
+            colors: [Colors.blueAccent.shade700, Colors.blueAccent.shade400],
           ),
         ),
         child: Center(
@@ -92,7 +86,6 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo/Title
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -100,14 +93,14 @@ class _LoginPageState extends State<LoginPage> {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.lock_outline,
+                    Icons.person_add_alt_1,
                     size: 48,
                     color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'Welcome Back',
+                  'Create Account',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -116,22 +109,37 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Sign in to your account',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
+                  'Fill in your details to get started',
+                  style: TextStyle(fontSize: 14, color: Colors.white70),
                 ),
-                const SizedBox(height: 40),
-
-                // Login Form
+                const SizedBox(height: 32),
                 Form(
                   key: _formKey,
                   child: Column(
                     children: [
-                      // Email Field
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          hintText: 'Full Name',
+                          prefixIcon: const Icon(Icons.person_outline),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your name';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           hintText: 'Email Address',
                           prefixIcon: const Icon(Icons.email_outlined),
@@ -141,26 +149,34 @@ class _LoginPageState extends State<LoginPage> {
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
+                        ),
+                        validator: _validateEmail,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(
+                          hintText: 'Phone Number',
+                          prefixIcon: const Icon(Icons.phone_outlined),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
                         ),
-                        keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your email';
+                            return 'Please enter your phone number';
                           }
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                              .hasMatch(value)) {
-                            return 'Please enter a valid email';
+                          if (!RegExp(r'^[0-9]{7,15}\$').hasMatch(value)) {
+                            return 'Enter a valid phone number';
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
-
-                      // Password Field
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
@@ -185,29 +201,52 @@ class _LoginPageState extends State<LoginPage> {
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
+                        ),
+                        validator: _validatePassword,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        obscureText: _obscureConfirmPassword,
+                        decoration: InputDecoration(
+                          hintText: 'Confirm Password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
+                              });
+                            },
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
+                            return 'Please confirm your password';
                           }
-                          if (value.length < 6) {
-                            return 'Password must be at least 6 characters';
+                          if (value != _passwordController.text) {
+                            return 'Passwords do not match';
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 24),
-
-                      // Login Button
                       SizedBox(
-                        width: 290,
-                        height: 48,
+                        width: double.infinity,
+                        height: 50,
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _login,
+                          onPressed: _isLoading ? null : _signup,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: Colors.blueAccent.shade700,
@@ -223,7 +262,7 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 )
                               : const Text(
-                                  'Sign In',
+                                  'Sign Up',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -232,59 +271,20 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
-                      // Forgot Password Link
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content:
-                                    Text('Forgot Password feature coming soon'),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            'Forgot Password?',
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text(
+                          'Already have an account? Sign In',
+                          style: TextStyle(
+                            color: Colors.white,
+                            decoration: TextDecoration.underline,
                           ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 24),
-
-                // Sign Up Link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Don\'t have an account? ',
-                      style: TextStyle(
-                        color: Colors.white70,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const SignupPage(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
